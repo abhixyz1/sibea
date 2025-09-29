@@ -18,6 +18,7 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -52,6 +53,11 @@ module.exports = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        government: {
+          blue: "hsl(var(--government-blue))",
+          gold: "hsl(var(--government-gold))",
+          red: "hsl(var(--government-red))",
         },
       },
       borderRadius: {
