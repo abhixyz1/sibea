@@ -1,0 +1,33 @@
+{
+    "name":  "sibea-monorepo",
+    "version":  "1.0.0",
+    "description":  "Sistem Informasi Beasiswa Daerah Kota Malang dengan DSS AHP/SAW",
+    "private":  true,
+    "packageManager":  "pnpm@8.15.6",
+    "scripts":  {
+                    "dev":  "concurrently \"pnpm --filter shared dev\" \"pnpm --filter web dev\" \"pnpm --filter api dev\"",
+                    "build":  "pnpm --filter shared build \u0026\u0026 pnpm --filter api build \u0026\u0026 pnpm --filter web build",
+                    "test":  "pnpm --recursive test",
+                    "lint":  "pnpm --recursive lint",
+                    "format":  "prettier --write .",
+                    "db:migrate":  "pnpm --filter api db:migrate",
+                    "db:seed":  "pnpm --filter api db:seed",
+                    "db:studio":  "pnpm --filter api db:studio",
+                    "prepare":  "husky install"
+                },
+    "devDependencies":  {
+                            "@commitlint/cli":  "^17.7.1",
+                            "@commitlint/config-conventional":  "^17.7.0",
+                            "concurrently":  "^8.2.0",
+                            "husky":  "^8.0.3",
+                            "lint-staged":  "^13.2.3",
+                            "prettier":  "^3.0.0",
+                            "typescript":  "^5.2.2"
+                        },
+    "pnpm":  {
+                 "overrides":  {
+                                   "@types/react":  "^18.2.15",
+                                   "@types/react-dom":  "^18.2.7"
+                               }
+             }
+}

@@ -1,0 +1,309 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  VERIFIKATOR
+  OPERATOR
+  SISWA
+  AUDITOR
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  VERIFIED
+  APPROVED
+  REJECTED
+}
+
+enum CriteriaType {
+  BENEFIT
+  COST
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  APPROVE
+  REJECT
+  EXPORT
+  IMPORT
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         UserRole  @default(SISWA)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  profileSiswa ProfileSiswa?
+  applications Application[]
+  auditLogs    AuditLog[]
+  decisions    DecisionSnapshot[]
+
+  @@map("users")
+}
+
+model ProfileSiswa {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  nama          String
+  nik           String   @unique
+  tanggalLahir  DateTime
+  tempatLahir   String
+  jenisKelamin  String // L or P
+  alamat        String
+  noTelepon     String
+  namaSekolah   String
+  jurusan       String
+  kelas         String
+  tahunLulus    Int
+  nilaiRataRata Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profile_siswa")
+}
+
+model Scholarship {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  periodStart DateTime
+  periodEnd   DateTime
+  quota       Int
+  isActive    Boolean  @default(true)
+  requirements Json    // Array of strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  criteria     Criterion[]
+  applications Application[]
+  ahpMatrices  AhpMatrix[]
+  sawMatrices  SawScoreMatrix[]
+  weights      Weight[]
+  results      Result[]
+  decisions    DecisionSnapshot[]
+
+  @@map("scholarships")
+}
+
+model Criterion {
+  id           String      @id @default(cuid())
+  scholarshipId String
+  name         String
+  description  String?
+  type         CriteriaType
+  weight       Float?
+  order        Int
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  scholarship  Scholarship    @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  subCriteria  SubCriterion[]
+  scores       ScoreRaw[]
+  weights      Weight[]
+
+  @@map("criteria")
+}
+
+model SubCriterion {
+  id          String   @id @default(cuid())
+  criterionId String
+  name        String
+  description String?
+  weight      Float
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  criterion Criterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@map("sub_criteria")
+}
+
+model Application {
+  id           String            @id @default(cuid())
+  userId       String
+  scholarshipId String
+  status       ApplicationStatus @default(DRAFT)
+  submittedAt  DateTime?
+  reviewedAt   DateTime?
+  score        Float?
+  rank         Int?
+  notes        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // Relations
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  evidences   Evidence[]
+  scores      ScoreRaw[]
+  results     Result[]
+
+  @@map("applications")
+}
+
+model Evidence {
+  id            String   @id @default(cuid())
+  applicationId String
+  kind          String
+  filename      String
+  url           String
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("evidences")
+}
+
+model ScoreRaw {
+  id            String   @id @default(cuid())
+  applicationId String
+  criterionId   String
+  value         Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  criterion   Criterion   @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, criterionId])
+  @@map("scores_raw")
+}
+
+model AhpMatrix {
+  id                String   @id @default(cuid())
+  scholarshipId     String
+  size              Int
+  matrix            Json     // 2D array of numbers
+  weights           Json?    // Array of numbers
+  lambdaMax         Float?
+  consistencyIndex  Float?
+  consistencyRatio  Float?
+  isConsistent      Boolean?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+
+  @@unique([scholarshipId])
+  @@map("ahp_matrices")
+}
+
+model SawScoreMatrix {
+  id               String   @id @default(cuid())
+  scholarshipId    String
+  rawScores        Json     // 2D array of numbers
+  normalizedScores Json     // 2D array of numbers
+  finalScores      Json     // Array of numbers
+  ranking          Json     // Array of ranking objects
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+
+  @@unique([scholarshipId])
+  @@map("saw_score_matrices")
+}
+
+model Weight {
+  id           String   @id @default(cuid())
+  scholarshipId String
+  criterionId  String
+  value        Float
+  method       String   // AHP, MANUAL
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  criterion   Criterion   @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@unique([scholarshipId, criterionId])
+  @@map("weights")
+}
+
+model Result {
+  id            String   @id @default(cuid())
+  applicationId String
+  scholarshipId String
+  score         Float
+  rank          Int
+  method        String   // SAW, TOPSIS, WP
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, method])
+  @@map("results")
+}
+
+model DecisionSnapshot {
+  id           String   @id @default(cuid())
+  scholarshipId String
+  method       String   // AHP_SAW
+  payload      Json     // Complete decision data
+  generatedBy  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  scholarship Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [generatedBy], references: [id])
+
+  @@map("decision_snapshots")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  actorId   String
+  action    AuditAction
+  entity    String
+  entityId  String
+  oldData   Json?
+  newData   Json?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+
+  // Relations
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}
+
