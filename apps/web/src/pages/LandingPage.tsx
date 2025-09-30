@@ -162,20 +162,6 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-
-        {/* Floating Cards */}
-        <div className="absolute top-1/4 left-10 hidden lg:block">
-          <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-100">
-            <GraduationCap className="w-8 h-8 text-blue-600 mb-2" />
-            <p className="text-sm font-medium text-gray-800">Pendidikan Berkualitas</p>
-          </div>
-        </div>
-        <div className="absolute top-1/3 right-10 hidden lg:block">
-          <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-100">
-            <Award className="w-8 h-8 text-green-600 mb-2" />
-            <p className="text-sm font-medium text-gray-800">Beasiswa Terjamin</p>
-          </div>
-        </div>
       </section>
 
       {/* Statistics */}
