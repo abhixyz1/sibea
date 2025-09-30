@@ -57,9 +57,23 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
     @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Smooth transitions for all elements */
+@layer components {
+  * {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
