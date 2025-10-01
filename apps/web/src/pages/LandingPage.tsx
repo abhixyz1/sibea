@@ -368,7 +368,7 @@ export default function LandingPage() {
                       Ajukan Permohonan Beasiswa
                     </Link>
                   </Button>
-                  <Button variant="outline" asChild className="w-full border-white text-white hover:bg-white hover:text-government-blue font-semibold py-3">
+                  <Button asChild className="w-full bg-yellow-400 text-gray-900 hover:bg-yellow-500 font-semibold py-3 shadow-lg">
                     <Link to="/login" className="flex items-center justify-center">
                       <Users className="mr-2 w-5 h-5" />
                       Cek Status Permohonan
